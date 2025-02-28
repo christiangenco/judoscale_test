@@ -22,25 +22,29 @@ This document provides instructions on how to test Judoscale autoscaling with th
    export RAILS_MAX_THREADS=5  # Set the number of threads per worker
    ```
 
-## Running the Test
+## Running the Tests
 
-1. Start your Rails server:
+You can run the tests against either your local server or the remote server at https://judoscale-test.onrender.com.
+
+### Web Request Testing
+
+1. If testing locally, start your Rails server:
 
    ```
    bundle exec rails server
    ```
 
-2. Visit the home page at http://localhost:3000 to access the testing interface with convenient links to the test endpoints.
+   If testing against the remote server, you can skip this step.
 
-3. In a separate terminal, run the autoscaling test script:
+2. In a terminal, run the web request test script:
 
    ```
    bin/test_autoscaling.rb
    ```
 
-   This will send 50 requests with 10 concurrent connections to the slow endpoint.
+   This will send 100 requests with 30 concurrent connections to the slow endpoint.
 
-4. You can customize the test parameters:
+3. You can customize the test parameters:
 
    ```
    bin/test_autoscaling.rb --help
@@ -49,8 +53,79 @@ This document provides instructions on how to test Judoscale autoscaling with th
    Example with custom parameters:
 
    ```
-   bin/test_autoscaling.rb --concurrency 20 --requests 100 --sleep 15
+   bin/test_autoscaling.rb --concurrency 40 --requests 150 --sleep 20
    ```
+
+   To test against a different URL:
+
+   ```
+   bin/test_autoscaling.rb --url http://localhost:3000/load_test/slow
+   ```
+
+### Background Job Testing
+
+1. If testing locally, start your Rails server with Solid Queue running in the same process:
+
+   ```
+   export SOLID_QUEUE_IN_PUMA=true
+   bundle exec rails server
+   ```
+
+   If testing against the remote server, you can skip this step.
+
+2. In a terminal, run the job queue test script:
+
+   ```
+   bin/test_job_queue.rb
+   ```
+
+   This will enqueue 250 jobs (5 batches of 50 jobs) that each run for 15 seconds.
+
+3. You can customize the test parameters:
+
+   ```
+   bin/test_job_queue.rb --help
+   ```
+
+   Example with custom parameters:
+
+   ```
+   bin/test_job_queue.rb --count 100 --duration 20 --batches 10
+   ```
+
+   To test against a different URL:
+
+   ```
+   bin/test_job_queue.rb --url http://localhost:3000/load_test/enqueue_jobs
+   ```
+
+### Combined Testing (Maximum Load)
+
+For the most effective testing, you can run both web request and job queue tests simultaneously:
+
+```
+bin/test_combined.rb
+```
+
+This will run both tests in parallel, creating maximum load on your application.
+
+You can customize the parameters:
+
+```
+bin/test_combined.rb --help
+```
+
+Example with custom parameters:
+
+```
+bin/test_combined.rb --web-concurrency 40 --web-requests 150 --job-count 100 --job-batches 10
+```
+
+To test against a different URL:
+
+```
+bin/test_combined.rb --url http://localhost:3000
+```
 
 ## What to Look For
 
@@ -62,17 +137,23 @@ This document provides instructions on how to test Judoscale autoscaling with th
 
 ## Manual Testing
 
-You can also manually test the slow endpoints:
+You can also manually test the endpoints:
 
 1. Single slow request:
 
    ```
-   curl "http://localhost:3000/load_test/slow?seconds=10"
+   curl "https://judoscale-test.onrender.com/load_test/slow?seconds=10"
    ```
 
 2. Concurrent slow requests:
+
    ```
-   curl "http://localhost:3000/load_test/concurrent_slow?threads=5&seconds=10"
+   curl "https://judoscale-test.onrender.com/load_test/concurrent_slow?threads=5&seconds=10"
+   ```
+
+3. Enqueue background jobs:
+   ```
+   curl "https://judoscale-test.onrender.com/load_test/enqueue_jobs?count=20&seconds=15"
    ```
 
 ## Troubleshooting
@@ -81,9 +162,11 @@ You can also manually test the slow endpoints:
 - Verify that the Judoscale gems are properly installed and loaded.
 - Check your application logs for any Judoscale-related errors.
 - Make sure your Puma server is configured to use multiple workers (WEB_CONCURRENCY > 1).
+- Ensure that Solid Queue is running (either in a separate process or in Puma with SOLID_QUEUE_IN_PUMA=true).
+- When testing against the remote server, make sure it's running and accessible.
 
 ## How It Works
 
-The test creates artificial load by making requests to endpoints that sleep for a specified duration. This simulates slow requests that would tie up your application's threads and workers.
+The test creates artificial load by making requests to endpoints that sleep for a specified duration and by enqueuing background jobs that also sleep. This simulates slow requests and jobs that would tie up your application's threads and workers.
 
 Judoscale monitors these metrics and recommends scaling your application based on the current load. In a production environment with proper autoscaling setup (like Heroku autoscaling), this would trigger the addition of more dynos/workers to handle the increased load.

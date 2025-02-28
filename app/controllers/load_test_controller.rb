@@ -27,4 +27,20 @@ class LoadTestController < ApplicationController
       message: "Created #{threads_count} threads that each slept for #{seconds} seconds"
     }
   end
+
+  # This action will enqueue a specified number of background jobs
+  # Use it to test Judoscale's job queue monitoring
+  def enqueue_jobs
+    count = params.fetch(:count, 10).to_i
+    seconds = params.fetch(:seconds, 10).to_i
+
+    count.times do
+      TestJob.perform_later(seconds)
+    end
+
+    render json: {
+      status: "success",
+      message: "Enqueued #{count} jobs that will each run for #{seconds} seconds"
+    }
+  end
 end

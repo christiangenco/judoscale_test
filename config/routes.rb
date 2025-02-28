@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   # Load testing routes for Judoscale autoscaling tests
   get "load_test/slow", to: "load_test#slow"
   get "load_test/concurrent_slow", to: "load_test#concurrent_slow"
+  get "load_test/enqueue_jobs", to: "load_test#enqueue_jobs"
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest

@@ -7,11 +7,11 @@ require 'json'
 require 'optparse'
 
 options = {
-  url: 'http://localhost:3000/load_test/slow',
-  concurrency: 10,
-  requests: 50,
-  sleep_seconds: 10,
-  delay: 0.5
+  url: 'https://judoscale-test.onrender.com/load_test/slow?seconds=20',
+  concurrency: 30,
+  requests: 100,
+  sleep_seconds: 20,
+  delay: 0.1
 }
 
 OptionParser.new do |opts|

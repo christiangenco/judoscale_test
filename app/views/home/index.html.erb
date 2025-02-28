@@ -34,6 +34,22 @@
           </a>
         </div>
       </div>
+
+      <div class="section">
+        <h3>Background Jobs</h3>
+        <p>This endpoint enqueues background jobs that each run for a specified duration.</p>
+        <div>
+          <a href="/load_test/enqueue_jobs?count=10&seconds=10" class="button button-orange">
+            Enqueue 10 jobs (10 seconds each)
+          </a>
+          <a href="/load_test/enqueue_jobs?count=20&seconds=15" class="button button-orange">
+            Enqueue 20 jobs (15 seconds each)
+          </a>
+          <a href="/load_test/enqueue_jobs?count=50&seconds=20" class="button button-orange">
+            Enqueue 50 jobs (20 seconds each)
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -44,15 +60,37 @@
     <h3>Quick Commands</h3>
     <div class="code-block">
 <pre>
-# Run the load test script
+# Run the web request load test script (targets remote server by default)
 bin/test_autoscaling.rb
 
 # Run with custom parameters
-bin/test_autoscaling.rb --concurrency 20 --requests 100 --sleep 15
+bin/test_autoscaling.rb --concurrency 40 --requests 150 --sleep 20
+
+# Test against local server
+bin/test_autoscaling.rb --url http://localhost:3000/load_test/slow
+
+# Run the job queue load test script (targets remote server by default)
+bin/test_job_queue.rb
+
+# Run with custom parameters
+bin/test_job_queue.rb --count 100 --duration 20 --batches 10
+
+# Test against local server
+bin/test_job_queue.rb --url http://localhost:3000/load_test/enqueue_jobs
+
+# Run the combined load test (web requests + job queue)
+bin/test_combined.rb
+
+# Run with custom parameters
+bin/test_combined.rb --web-concurrency 40 --web-requests 150 --job-count 100 --job-batches 10
+
+# Test against local server
+bin/test_combined.rb --url http://localhost:3000
 
 # Manual testing with curl
-curl "http://localhost:3000/load_test/slow?seconds=10"
-curl "http://localhost:3000/load_test/concurrent_slow?threads=5&seconds=10"
+curl "https://judoscale-test.onrender.com/load_test/slow?seconds=10"
+curl "https://judoscale-test.onrender.com/load_test/concurrent_slow?threads=5&seconds=10"
+curl "https://judoscale-test.onrender.com/load_test/enqueue_jobs?count=20&seconds=15"
 </pre>
     </div>
   </div>
